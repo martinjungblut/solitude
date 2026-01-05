@@ -56,4 +56,16 @@ The goal here is to practice locating the overflowing write and relating the cra
 
 For the `debug` build, ASan is enabled, which displays the issue more clearly.
 
-For the `release` build, the results are not deterministic. The program may work fine if the input provided is short enough, or it may die with a segmentation fault if the process tries to access an invalid memory address. We can also change the boolean value of the `authenticated` variable.
+For the `release` build, the results are not deterministic. The program may work fine if the input provided is short enough, or it may die with a segmentation fault if the process tries to access an invalid memory address. We can also change the boolean value of the `authenticated` 
+
+### `05-trace-hooks`
+
+For this example, we want to determine a full stack trace for any executable.
+
+This technique uses GCC/Clang’s `-finstrument-functions` to trace execution. With that flag enabled, the compiler inserts calls to `__cyg_profile_func_enter()` and `__cyg_profile_func_exit()` at the start and end of most functions. By providing these hook functions, you can log function entry/exit (using the function and caller addresses) and later resolve addresses to names and file:line using debuginfo.
+
+The hooks can live in a small shared library injected with LD_PRELOAD, so you don’t need to patch upstream sources. To improve name resolution for functions in the main executable, link it with -`rdynamic` (or `-Wl,-export-dynamic`).
+
+It's important that the executable itself being debugged is built using `-finstrument-functions`. The shared library merely provides the functions to be called.
+
+Check the `Makefile`.
